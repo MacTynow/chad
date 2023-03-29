@@ -48,11 +48,18 @@ var promptCmd = &cobra.Command{
 		requestURL := "https://api.openai.com/v1/chat/completions"
 
 		prompt, _ := cmd.Flags().GetString("prompt")
+		data, _ := cmd.Flags().GetString("data")
+		model, _ := cmd.Flags().GetString("model")
+		temperature, _ := cmd.Flags().GetFloat64("temperature")
+
+		if data != "" {
+			prompt = fmt.Sprintf("%s: %s", prompt, data)
+		}
 
 		requestBody := RequestBody{
-			Model:       "gpt-3.5-turbo",
+			Model:       model,
 			Messages:    []Message{{Role: "user", Content: prompt}},
-			Temperature: 0.7,
+			Temperature: temperature,
 		}
 
 		jsonBody, err := json.Marshal(requestBody)
@@ -89,4 +96,7 @@ var promptCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(promptCmd)
 	promptCmd.Flags().StringP("prompt", "p", "Say hello", "The prompt to use for the chatbot")
+	promptCmd.Flags().StringP("data", "d", "", "Optional data to pass for a prompt")
+	promptCmd.Flags().Float64P("temperature", "t", 0.7, "The temperature to use for the chatbot")
+	promptCmd.Flags().StringP("model", "m", "gpt-3.5-turbo", "The model to use for the chatbot")
 }

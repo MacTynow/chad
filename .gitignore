@@ -35,3 +35,6 @@ Icon?
 
 # Ignore vendor folder
 vendor/
+
+# Ignore .csv files
+*.csv
