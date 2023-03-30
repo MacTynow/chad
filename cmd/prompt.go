@@ -1,5 +1,5 @@
 /*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
+Copyright © 2023 mactynow charles@mactynow.ovh
 */
 package cmd
 
@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -51,9 +52,20 @@ var promptCmd = &cobra.Command{
 		data, _ := cmd.Flags().GetString("data")
 		model, _ := cmd.Flags().GetString("model")
 		temperature, _ := cmd.Flags().GetFloat64("temperature")
+		fileName, _ := cmd.Flags().GetString("file")
 
 		if data != "" {
 			prompt = fmt.Sprintf("%s: %s", prompt, data)
+		}
+
+		if fileName != "" {
+			file, err := ioutil.ReadFile(fileName)
+			if err != nil {
+				fmt.Println("Error reading file:", err)
+				return
+			}
+			content := string(file)
+			prompt = fmt.Sprintf("%s: %s", prompt, content)
 		}
 
 		requestBody := RequestBody{
@@ -96,7 +108,8 @@ var promptCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(promptCmd)
 	promptCmd.Flags().StringP("prompt", "p", "Say hello", "The prompt to use for the chatbot")
-	promptCmd.Flags().StringP("data", "d", "", "Optional data to pass for a prompt")
+	promptCmd.Flags().StringP("data", "d", "", "Optional data string to pass for a prompt")
+	promptCmd.Flags().StringP("file", "f", "", "Optional data file to pass for a prompt")
 	promptCmd.Flags().Float64P("temperature", "t", 0.7, "The temperature to use for the chatbot")
 	promptCmd.Flags().StringP("model", "m", "gpt-3.5-turbo", "The model to use for the chatbot")
 }
