@@ -1,13 +1,10 @@
-/*
-Copyright © 2023 mactynow charles@mactynow.ovh
-*/
 package cmd
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
@@ -56,15 +53,21 @@ var promptCmd = &cobra.Command{
 		model, _ := cmd.Flags().GetString("model")
 		temperature, _ := cmd.Flags().GetFloat64("temperature")
 		fileName, _ := cmd.Flags().GetString("file")
+		openAIApiKey := os.Getenv("OPENAI_API_KEY")
+
+		if openAIApiKey == "" {
+			log.Println("Please set the OPENAI_API_KEY environment variable")
+			return
+		}
 
 		if data != "" {
 			prompt = fmt.Sprintf("%s: %s", prompt, data)
 		}
 
 		if fileName != "" {
-			file, err := ioutil.ReadFile(fileName)
+			file, err := os.ReadFile(fileName)
 			if err != nil {
-				fmt.Println("Error reading file:", err)
+				log.Println("Error reading file:", err)
 				return
 			}
 			content := string(file)
@@ -79,21 +82,21 @@ var promptCmd = &cobra.Command{
 
 		jsonBody, err := json.Marshal(requestBody)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 
 		req, err := http.NewRequest(http.MethodPost, requestURL, bytes.NewReader(jsonBody))
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 
 		req.Header.Add("Content-Type", "application/json")
-		req.Header.Add("Authorization", "Bearer "+os.Getenv("OPENAI_API_KEY"))
+		req.Header.Add("Authorization", "Bearer "+openAIApiKey)
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 
 		defer resp.Body.Close()
@@ -101,7 +104,12 @@ var promptCmd = &cobra.Command{
 		var responseBody ResponseBody
 		err = json.NewDecoder(resp.Body).Decode(&responseBody)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
+		}
+
+		if len(responseBody.Choices) == 0 {
+			log.Println("No response:", responseBody.Usage)
+			return
 		}
 
 		fmt.Println(responseBody.Choices[0].Message.Content)
