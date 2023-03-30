@@ -44,11 +44,14 @@ type Usage struct {
 var promptCmd = &cobra.Command{
 	Use:   "prompt",
 	Short: "Ask a question and get a response",
-	Long:  ``,
+	Args:  cobra.ExactArgs(1),
+	Long: `Basic prompt: gptcmd prompt "What is the meaning of life?"
+	You can also pass a file as input with the --file flag: gptcmd prompt "What is the meaning of life?" --file input.txt
+	You can tweak the model and temperature as well with the --model and --temperature flags: gptcmd prompt "What is the meaning of life?" --model davinci --temperature 0.5`,
 	Run: func(cmd *cobra.Command, args []string) {
 		requestURL := "https://api.openai.com/v1/chat/completions"
 
-		prompt, _ := cmd.Flags().GetString("prompt")
+		prompt := args[0]
 		data, _ := cmd.Flags().GetString("data")
 		model, _ := cmd.Flags().GetString("model")
 		temperature, _ := cmd.Flags().GetFloat64("temperature")
@@ -107,7 +110,6 @@ var promptCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(promptCmd)
-	promptCmd.Flags().StringP("prompt", "p", "Say hello", "The prompt to use for the chatbot")
 	promptCmd.Flags().StringP("data", "d", "", "Optional data string to pass for a prompt")
 	promptCmd.Flags().StringP("file", "f", "", "Optional data file to pass for a prompt")
 	promptCmd.Flags().Float64P("temperature", "t", 0.7, "The temperature to use for the chatbot")
