@@ -24,7 +24,8 @@ type Data struct {
 var imageCmd = &cobra.Command{
 	Use:   "image",
 	Short: "Generate an image",
-	Long:  ``,
+	Args:  cobra.ExactArgs(1),
+	Long:  `Generate an image: gptcmd image "A picture of a cat"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		requestURL := "https://api.openai.com/v1/images/generations"
 		prompt := args[0]
