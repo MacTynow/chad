@@ -1,3 +1,6 @@
+/*
+Copyright © 2023 mactynow charles@mactynow.ovh
+*/
 package cmd
 
 import (
@@ -26,6 +29,22 @@ type ChatResponseBody struct {
 			Content string `json:"content"`
 		} `json:"message"`
 	} `json:"choices"`
+}
+
+type EditResponseBody struct {
+	Choices []struct {
+		Text string `json:"text"`
+	} `json:"choices"`
+}
+
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type Choice struct {
+	Index   int     `json:"index"`
+	Message Message `json:"message"`
 }
 
 func sendRequesttoOpenAI(requestURL string, requestBody RequestBody) (string, error) {
@@ -72,6 +91,8 @@ func handleResponseBody(requestURL string) ResponseBody {
 		return &ImageResponseBody{}
 	case strings.Contains(requestURL, "chat"):
 		return &ChatResponseBody{}
+	case strings.Contains(requestURL, "edit"):
+		return &EditResponseBody{}
 	default:
 		return ""
 	}
@@ -87,6 +108,12 @@ func returnResponseString(responseBody ResponseBody) string {
 			return "no response"
 		}
 		return choices[0].Message.Content
+	case *EditResponseBody:
+		choices := responseBody.Choices
+		if len(choices) == 0 {
+			return "no response"
+		}
+		return choices[0].Text
 	default:
 		return "invalid response body"
 	}

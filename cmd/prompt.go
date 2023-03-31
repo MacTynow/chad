@@ -1,3 +1,6 @@
+/*
+Copyright © 2023 mactynow charles@mactynow.ovh
+*/
 package cmd
 
 import (
@@ -12,16 +15,6 @@ type ChatRequestBody struct {
 	Model       string    `json:"model"`
 	Messages    []Message `json:"messages"`
 	Temperature float64   `json:"temperature"`
-}
-
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-type Choice struct {
-	Index   int     `json:"index"`
-	Message Message `json:"message"`
 }
 
 type Usage struct {
