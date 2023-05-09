@@ -1,6 +1,7 @@
-# GPTCMD
+# CHAD
 
-A chatgpt cli powered by cobra, completely ripped of from https://kadekillary.work/posts/1000x-eng/.
+A openai cli powered by cobra, completely ripped of from https://kadekillary.work/posts/1000x-eng/.
+Supports history. For those who prefer to be in the console.
 
 ## Usage
 
@@ -34,6 +35,7 @@ Flags:
   -f, --file string         Optional data file to pass for a prompt
   -h, --help                help for prompt
   -m, --model string        The model to use for the chatbot (default "gpt-3.5-turbo")
+  -n, --new-chat            Start a new chat conversation (reset history)
   -t, --temperature float   The temperature to use for the chatbot (default 0.7)
 ```
 
