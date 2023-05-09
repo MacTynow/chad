@@ -4,6 +4,7 @@ Copyright © 2023 mactynow charles@mactynow.ovh
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"log"
@@ -11,6 +12,8 @@ import (
 	"os"
 	"strings"
 )
+
+const historyFilePath = "/tmp/messages.json"
 
 type RequestBody interface{}
 
@@ -26,6 +29,7 @@ type ImageResponseBody struct {
 type ChatResponseBody struct {
 	Choices []struct {
 		Message struct {
+			Role    string `json:"role"`
 			Content string `json:"content"`
 		} `json:"message"`
 	} `json:"choices"`
@@ -107,6 +111,9 @@ func returnResponseString(responseBody ResponseBody) string {
 		if len(choices) == 0 {
 			return "no response"
 		}
+
+		storeHistory(choices[0].Message)
+
 		return choices[0].Message.Content
 	case *EditResponseBody:
 		choices := responseBody.Choices
@@ -117,4 +124,57 @@ func returnResponseString(responseBody ResponseBody) string {
 	default:
 		return "invalid response body"
 	}
+}
+
+func storeHistory(message Message) {
+	file, err := os.OpenFile(historyFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Println(err)
+	}
+	defer file.Close()
+
+	jsonBytes, err := json.Marshal(message)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	if _, err := file.Write(jsonBytes); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if _, err := file.WriteString("\n"); err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+func readHistory() []Message {
+	messages := []Message{}
+	file, err := os.OpenFile(historyFilePath, os.O_RDONLY|os.O_CREATE, 0666)
+	if err != nil {
+		log.Println("Error opening file:", err)
+		return nil
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		var message Message
+		if err := json.Unmarshal(scanner.Bytes(), &message); err != nil {
+			log.Println("Error parsing JSON:", err)
+			continue
+		}
+
+		messages = append(messages, message)
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Println("Error reading file:", err)
+		return nil
+	}
+
+	return messages
 }

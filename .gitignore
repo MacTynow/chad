@@ -38,3 +38,6 @@ vendor/
 
 # Ignore .csv files
 *.csv
+
+# Ignore database
+database/

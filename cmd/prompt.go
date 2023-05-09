@@ -32,6 +32,7 @@ var promptCmd = &cobra.Command{
 	You can tweak the model and temperature as well with the --model and --temperature flags: gptcmd prompt "What is the meaning of life?" --model davinci --temperature 0.5`,
 	Run: func(cmd *cobra.Command, args []string) {
 		requestURL := "https://api.openai.com/v1/chat/completions"
+		messages := []Message{}
 		prompt := args[0]
 		model, _ := cmd.Flags().GetString("model")
 		temperature, _ := cmd.Flags().GetFloat64("temperature")
@@ -51,9 +52,22 @@ var promptCmd = &cobra.Command{
 			prompt = fmt.Sprintf("%s: %s", prompt, content)
 		}
 
+		promptMessage := Message{Role: "user", Content: prompt}
+
+		newChat, _ := cmd.Flags().GetBool("new-chat")
+		if newChat {
+			if _, err := os.Stat(historyFilePath); err == nil {
+				os.Remove(historyFilePath)
+			}
+		} else {
+			messages = readHistory()
+		}
+
+		storeHistory(promptMessage)
+		messages = append(messages, promptMessage)
 		requestBody := ChatRequestBody{
 			Model:       model,
-			Messages:    []Message{{Role: "user", Content: prompt}},
+			Messages:    messages,
 			Temperature: temperature,
 		}
 
@@ -73,4 +87,5 @@ func init() {
 	promptCmd.Flags().StringP("file", "f", "", "Optional data file to pass for a prompt")
 	promptCmd.Flags().Float64P("temperature", "t", 0.7, "The temperature to use for the chatbot")
 	promptCmd.Flags().StringP("model", "m", "gpt-3.5-turbo", "The model to use for the chatbot")
+	promptCmd.Flags().BoolP("new-chat", "n", false, "Start a new chat conversation")
 }

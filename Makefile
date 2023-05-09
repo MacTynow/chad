@@ -20,3 +20,6 @@ install: build
 # Define the clean target
 clean:
 	rm -f $(BINARY_NAME)
+
+db_purge:
+	rm -f database/*
