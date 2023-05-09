@@ -14,13 +14,23 @@ import (
 
 type RequestBody interface{}
 
-type ResponseBody interface{}
+type ResponseBody interface {
+	Error() OpenAIError
+}
+
+type OpenAIError struct {
+	Error struct {
+		Type    string `json:"type"`
+		Message string `json:"message"`
+	} `json:"error"`
+}
 
 type ImageResponseBody struct {
 	Created int64 `json:"created"`
 	Data    []struct {
 		Url string `json:"url"`
 	} `json:"data"`
+	ErrorField *OpenAIError `json:"error,omitempty"`
 }
 
 type ChatResponseBody struct {
@@ -29,12 +39,14 @@ type ChatResponseBody struct {
 			Content string `json:"content"`
 		} `json:"message"`
 	} `json:"choices"`
+	ErrorField *OpenAIError `json:"error,omitempty"`
 }
 
 type EditResponseBody struct {
 	Choices []struct {
 		Text string `json:"text"`
 	} `json:"choices"`
+	ErrorField *OpenAIError `json:"error,omitempty"`
 }
 
 type Message struct {
@@ -45,6 +57,27 @@ type Message struct {
 type Choice struct {
 	Index   int     `json:"index"`
 	Message Message `json:"message"`
+}
+
+func (i *ImageResponseBody) Error() OpenAIError {
+	if i.ErrorField != nil {
+		return *i.ErrorField
+	}
+	return OpenAIError{}
+}
+
+func (c *ChatResponseBody) Error() OpenAIError {
+	if c.ErrorField != nil {
+		return *c.ErrorField
+	}
+	return OpenAIError{}
+}
+
+func (e *EditResponseBody) Error() OpenAIError {
+	if e.ErrorField != nil {
+		return *e.ErrorField
+	}
+	return OpenAIError{}
 }
 
 func sendRequesttoOpenAI(requestURL string, requestBody RequestBody) (string, error) {
@@ -94,11 +127,19 @@ func handleResponseBody(requestURL string) ResponseBody {
 	case strings.Contains(requestURL, "edit"):
 		return &EditResponseBody{}
 	default:
-		return ""
+		return nil
 	}
 }
 
 func returnResponseString(responseBody ResponseBody) string {
+	if responseBody == nil {
+		return "invalid response body"
+	}
+
+	if responseBody.Error().Error.Message != "" {
+		return responseBody.Error().Error.Message
+	}
+
 	switch responseBody := responseBody.(type) {
 	case *ImageResponseBody:
 		return responseBody.Data[0].Url
